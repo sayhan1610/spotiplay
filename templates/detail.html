@@ -1,0 +1,37 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>{{ playlist.name }} - SpotiPlay</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+</head>
+<body class="detail">
+  <main class="wrap">
+    <a class="back" href="/">← Back to all playlists</a>
+    <section class="card">
+      <div class="cover">
+        {% if playlist.image_url %}
+          <img src="{{ playlist.image_url }}" alt="{{ playlist.name }} cover art">
+        {% endif %}
+      </div>
+      <div class="content">
+        <h1>{{ playlist.name }}</h1>
+        <div class="meta">
+          <span class="pill">Spotify playlist</span>
+        </div>
+        <p>{{ playlist.description }}</p>
+        <div class="actions">
+          {% if playlist.spotify_url %}
+            <a class="btn primary" href="{{ playlist.spotify_url }}" target="_blank" rel="noreferrer">Open in Spotify</a>
+          {% endif %}
+          <a class="btn secondary" href="/api/playlists/{{ playlist.id }}">View JSON</a>
+        </div>
+      </div>
+    </section>
+  </main>
+</body>
+</html>

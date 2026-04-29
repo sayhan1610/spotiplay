@@ -1,0 +1,58 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>SpotiPlay - Spotify Playlists Showcase</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+</head>
+<body>
+  <main class="wrap">
+    <section class="hero">
+      <div class="eyebrow">Project for CIS 115</div>
+      <h1>Project SpotiPlay</h1>
+      <div class="meta">
+        <span class="pill">Preset playlist list</span>
+        <span class="pill">Spotify Web API</span>
+        <span class="pill">Flask backend</span>
+        <span class="pill">CSS UI design</span>
+      </div>
+    </section>
+
+    {% if playlists %}
+      <section class="grid">
+        {% for playlist in playlists %}
+          <article class="card">
+            <div class="cover">
+              {% if playlist.image_url %}
+                <img src="{{ playlist.image_url }}" alt="{{ playlist.name }} cover art">
+              {% else %}
+                <div class="fallback">No Cover Art</div>
+              {% endif %}
+            </div>
+            <div class="content">
+              <div class="title-row">
+                <h2 class="title">{{ playlist.name }}</h2>
+              </div>
+              <p class="desc">{{ playlist.description }}</p>
+              <div class="actions">
+                {% if playlist.spotify_url %}
+                  <a class="btn primary" href="{{ playlist.spotify_url }}" target="_blank" rel="noreferrer">Open in Spotify</a>
+                {% endif %}
+                <a class="btn secondary" href="/playlist/{{ playlist.id }}">Details</a>
+              </div>
+            </div>
+          </article>
+        {% endfor %}
+      </section>
+    {% else %}
+      <div class="empty">
+        No playlists found yet. Add playlist URLs or IDs to <strong>playlists.json</strong> and refresh.
+      </div>
+    {% endif %}
+  </main>
+</body>
+</html>

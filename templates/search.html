@@ -1,0 +1,173 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Search - Spotify Toolkit</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+</head>
+<body>
+    <nav class="navbar">
+        <div class="nav-brand">
+            <svg class="spotify-icon" viewBox="0 0 24 24" fill="currentColor">
+                <path d="M12 0C5.4 0 0 5.4 0 12s5.4 12 12 12 12-5.4 12-12S18.66 0 12 0zm5.521 17.34c-.24.359-.66.48-1.021.24-2.82-1.74-6.36-2.101-10.561-1.141-.418.122-.779-.179-.899-.539-.12-.421.18-.78.54-.9 4.56-1.021 8.52-.6 11.64 1.32.42.18.479.659.301 1.02zm1.44-3.3c-.301.42-.841.6-1.262.3-3.239-1.98-8.159-2.58-11.939-1.38-.479.12-1.02-.12-1.14-.6-.12-.48.12-1.021.6-1.141C9.6 9.9 15 10.561 18.72 12.84c.361.181.54.78.241 1.2zm.12-3.36C15.24 8.4 8.82 8.16 5.16 9.301c-.6.179-1.2-.181-1.38-.721-.18-.601.18-1.2.72-1.381 4.26-1.26 11.28-1.02 15.721 1.621.539.3.719 1.02.419 1.56-.299.421-1.02.599-1.559.3z"/>
+            </svg>
+            <span>Spotify Toolkit</span>
+        </div>
+        <div class="nav-links">
+            <a href="/" class="nav-link">Dashboard</a>
+            <a href="/search" class="nav-link active">Search</a>
+            <a href="/browse" class="nav-link">Browse</a>
+            <a href="/recommendations" class="nav-link">Discover</a>
+            <a href="/analyzer" class="nav-link">Analyzer</a>
+        </div>
+    </nav>
+
+    <main class="main-content">
+        <section class="search-header">
+            <h1>Search Spotify</h1>
+            <div class="search-box">
+                <input type="text" id="searchInput" placeholder="Search for tracks, artists, albums...">
+                <select id="searchType">
+                    <option value="track">Tracks</option>
+                    <option value="artist">Artists</option>
+                    <option value="album">Albums</option>
+                    <option value="playlist">Playlists</option>
+                </select>
+                <button class="search-btn" onclick="performSearch()">Search</button>
+            </div>
+            <div class="search-tabs">
+                <button class="tab-btn active" data-type="track" onclick="setSearchType('track')">Tracks</button>
+                <button class="tab-btn" data-type="artist" onclick="setSearchType('artist')">Artists</button>
+                <button class="tab-btn" data-type="album" onclick="setSearchType('album')">Albums</button>
+                <button class="tab-btn" data-type="playlist" onclick="setSearchType('playlist')">Playlists</button>
+            </div>
+        </section>
+
+        <section class="search-results" id="results">
+            <div class="results-placeholder">
+                <p>Enter a search term to find music on Spotify</p>
+            </div>
+        </section>
+    </main>
+
+    <script>
+        let currentType = 'track';
+
+        function setSearchType(type) {
+            currentType = type;
+            document.getElementById('searchType').value = type;
+            document.querySelectorAll('.tab-btn').forEach(btn => {
+                btn.classList.toggle('active', btn.dataset.type === type);
+            });
+        }
+
+        async function performSearch() {
+            const query = document.getElementById('searchInput').value.trim();
+            if (!query) return;
+
+            const resultsDiv = document.getElementById('results');
+            resultsDiv.innerHTML = '<div class="loading">Searching...</div>';
+
+            try {
+                const response = await fetch(`/api/search?q=${encodeURIComponent(query)}&type=${currentType}&limit=20`);
+                const data = await response.json();
+
+                if (data.error) {
+                    resultsDiv.innerHTML = `<div class="error">${data.error}</div>`;
+                    return;
+                }
+
+                const items = data[currentType + 's']?.items || [];
+                
+                if (items.length === 0) {
+                    resultsDiv.innerHTML = '<div class="results-placeholder">No results found</div>';
+                    return;
+                }
+
+                renderResults(items);
+            } catch (err) {
+                resultsDiv.innerHTML = `<div class="error">Error: ${err.message}</div>`;
+            }
+        }
+
+        function renderResults(items) {
+            const resultsDiv = document.getElementById('results');
+            
+            if (currentType === 'track') {
+                resultsDiv.innerHTML = items.map(track => `
+                    <div class="result-item track-item" onclick="location.href='/track/${track.id}'">
+                        <img src="${track.album?.images?.[2]?.url || track.album?.images?.[0]?.url || ''}" alt="${track.name}">
+                        <div class="item-info">
+                            <div class="item-name">${track.name}</div>
+                            <div class="item-meta">
+                                ${track.artists?.map(a => a.name).join(', ')} • ${formatDuration(track.duration_ms)}
+                            </div>
+                        </div>
+                        <button class="copy-btn" onclick="event.stopPropagation(); copyTrackInfo('${track.id}')" title="Copy track info">📋</button>
+                    </div>
+                `).join('');
+            } else if (currentType === 'artist') {
+                resultsDiv.innerHTML = items.map(artist => `
+                    <div class="result-item artist-item" onclick="location.href='/artist/${artist.id}'">
+                        <img src="${artist.images?.[2]?.url || artist.images?.[0]?.url || ''}" alt="${artist.name}" style="border-radius: 50%;">
+                        <div class="item-info">
+                            <div class="item-name">${artist.name}</div>
+                            <div class="item-meta">${artist.followers?.total?.toLocaleString() || 0} followers</div>
+                        </div>
+                    </div>
+                `).join('');
+            } else if (currentType === 'album') {
+                resultsDiv.innerHTML = items.map(album => `
+                    <div class="result-item album-item" onclick="location.href='/album/${album.id}'">
+                        <img src="${album.images?.[2]?.url || album.images?.[0]?.url || ''}" alt="${album.name}">
+                        <div class="item-info">
+                            <div class="item-name">${album.name}</div>
+                            <div class="item-meta">
+                                ${album.artists?.map(a => a.name).join(', ')} • ${album.release_date?.slice(0, 4) || ''}
+                            </div>
+                        </div>
+                    </div>
+                `).join('');
+            } else if (currentType === 'playlist') {
+                resultsDiv.innerHTML = items.map(playlist => `
+                    <div class="result-item playlist-item" onclick="location.href='/playlist/${playlist.id}'">
+                        <img src="${playlist.images?.[0]?.url || ''}" alt="${playlist.name}">
+                        <div class="item-info">
+                            <div class="item-name">${playlist.name}</div>
+                            <div class="item-meta">${playlist.owner?.display_name || 'Unknown'} • ${playlist.tracks?.total || 0} tracks</div>
+                        </div>
+                    </div>
+                `).join('');
+            }
+        }
+
+        function formatDuration(ms) {
+            const minutes = Math.floor(ms / 60000);
+            const seconds = Math.floor((ms % 60000) / 1000);
+            return `${minutes}:${seconds.toString().padStart(2, '0')}`;
+        }
+
+        async function copyTrackInfo(trackId) {
+            try {
+                const response = await fetch(`/api/track/${trackId}`);
+                const track = await response.json();
+                
+                const info = `${track.name} - ${track.artists.map(a => a.name).join(', ')}\n${track.external_urls.spotify}`;
+                await navigator.clipboard.writeText(info);
+                alert('Track info copied to clipboard!');
+            } catch (err) {
+                alert('Failed to copy: ' + err.message);
+            }
+        }
+
+        // Search on Enter
+        document.getElementById('searchInput').addEventListener('keypress', (e) => {
+            if (e.key === 'Enter') performSearch();
+        });
+    </script>
+</body>
+</html>

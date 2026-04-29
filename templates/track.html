@@ -1,0 +1,155 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Track Details - Spotify Toolkit</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+</head>
+<body>
+    <nav class="navbar">
+        <div class="nav-brand">
+            <svg class="spotify-icon" viewBox="0 0 24 24" fill="currentColor">
+                <path d="M12 0C5.4 0 0 5.4 0 12s5.4 12 12 12 12-5.4 12-12S18.66 0 12 0zm5.521 17.34c-.24.359-.66.48-1.021.24-2.82-1.74-6.36-2.101-10.561-1.141-.418.122-.779-.179-.899-.539-.12-.421.18-.78.54-.9 4.56-1.021 8.52-.6 11.64 1.32.42.18.479.659.301 1.02zm1.44-3.3c-.301.42-.841.6-1.262.3-3.239-1.98-8.159-2.58-11.939-1.38-.479.12-1.02-.12-1.14-.6-.12-.48.12-1.021.6-1.141C9.6 9.9 15 10.561 18.72 12.84c.361.181.54.78.241 1.2zm.12-3.36C15.24 8.4 8.82 8.16 5.16 9.301c-.6.179-1.2-.181-1.38-.721-.18-.601.18-1.2.72-1.381 4.26-1.26 11.28-1.02 15.721 1.621.539.3.719 1.02.419 1.56-.299.421-1.02.599-1.559.3z"/>
+            </svg>
+            <span>Spotify Toolkit</span>
+        </div>
+        <div class="nav-links">
+            <a href="/" class="nav-link">Dashboard</a>
+            <a href="/search" class="nav-link">Search</a>
+            <a href="/browse" class="nav-link">Browse</a>
+            <a href="/recommendations" class="nav-link">Discover</a>
+            <a href="/analyzer" class="nav-link">Analyzer</a>
+        </div>
+    </nav>
+
+    <main class="main-content">
+        <div class="detail-header">
+            <img src="{{ track.album.images[0].url if track.album.images else '' }}" alt="{{ track.name }}" class="detail-image">
+            <div class="detail-info">
+                <span class="detail-type">Track</span>
+                <h1>{{ track.name }}</h1>
+                <p class="detail-artists">
+                    {% for artist in track.artists %}
+                        <a href="/artist/{{ artist.id }}">{{ artist.name }}</a>{% if not loop.last %}, {% endif %}
+                    {% endfor %}
+                </p>
+                <div class="detail-meta">
+                    <span>{{ track.album.name }}</span>
+                    <span>•</span>
+                    <span>{{ track.duration_ms | format_duration }}</span>
+                    <span>•</span>
+                    <span>{{ track.popularity }}% popularity</span>
+                </div>
+                <div class="detail-actions">
+                    <a href="{{ track.external_urls.spotify }}" target="_blank" class="action-btn spotify-btn">
+                        Open in Spotify
+                    </a>
+                    <button class="action-btn" onclick="copyTrackInfo()">
+                        📋 Copy Info
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        {% if features %}
+        <section class="audio-features">
+            <h2>Audio Features</h2>
+            <div class="features-grid">
+                <div class="feature-item">
+                    <div class="feature-label">Energy</div>
+                    <div class="feature-bar">
+                        <div class="feature-fill" style="width: {{ (features.energy * 100) | int }}%"></div>
+                    </div>
+                    <div class="feature-value">{{ (features.energy * 100) | int }}%</div>
+                </div>
+                <div class="feature-item">
+                    <div class="feature-label">Danceability</div>
+                    <div class="feature-bar">
+                        <div class="feature-fill" style="width: {{ (features.danceability * 100) | int }}%"></div>
+                    </div>
+                    <div class="feature-value">{{ (features.danceability * 100) | int }}%</div>
+                </div>
+                <div class="feature-item">
+                    <div class="feature-label">Valence (Mood)</div>
+                    <div class="feature-bar">
+                        <div class="feature-fill" style="width: {{ (features.valence * 100) | int }}%"></div>
+                    </div>
+                    <div class="feature-value">{{ (features.valence * 100) | int }}%</div>
+                </div>
+                <div class="feature-item">
+                    <div class="feature-label">Acousticness</div>
+                    <div class="feature-bar">
+                        <div class="feature-fill" style="width: {{ (features.acousticness * 100) | int }}%"></div>
+                    </div>
+                    <div class="feature-value">{{ (features.acousticness * 100) | int }}%</div>
+                </div>
+                <div class="feature-item">
+                    <div class="feature-label">Instrumentalness</div>
+                    <div class="feature-bar">
+                        <div class="feature-fill" style="width: {{ (features.instrumentalness * 100) | int }}%"></div>
+                    </div>
+                    <div class="feature-value">{{ (features.instrumentalness * 100) | int }}%</div>
+                </div>
+                <div class="feature-item">
+                    <div class="feature-label">Liveness</div>
+                    <div class="feature-bar">
+                        <div class="feature-fill" style="width: {{ (features.liveness * 100) | int }}%"></div>
+                    </div>
+                    <div class="feature-value">{{ (features.liveness * 100) | int }}%</div>
+                </div>
+                <div class="feature-item">
+                    <div class="feature-label">Speechiness</div>
+                    <div class="feature-bar">
+                        <div class="feature-fill" style="width: {{ (features.speechiness * 100) | int }}%"></div>
+                    </div>
+                    <div class="feature-value">{{ (features.speechiness * 100) | int }}%</div>
+                </div>
+                <div class="feature-item">
+                    <div class="feature-label">Loudness</div>
+                    <div class="feature-bar">
+                        <div class="feature-fill" style="width: {{ ((features.loudness + 60) / 60 * 100) | int }}%"></div>
+                    </div>
+                    <div class="feature-value">{{ features.loudness | int }} dB</div>
+                </div>
+                <div class="feature-item">
+                    <div class="feature-label">Tempo</div>
+                    <div class="feature-bar">
+                        <div class="feature-fill" style="width: {{ (features.tempo / 200 * 100) | int }}%"></div>
+                    </div>
+                    <div class="feature-value">{{ features.tempo | int }} BPM</div>
+                </div>
+                <div class="feature-item">
+                    <div class="feature-label">Key</div>
+                    <div class="feature-value">{{ features.key | key_name }}</div>
+                </div>
+            </div>
+        </section>
+        {% endif %}
+
+        <section class="detail-section">
+            <h2>Album</h2>
+            <a href="/album/{{ track.album.id }}" class="album-card">
+                <img src="{{ track.album.images[2].url if track.album.images[2] else track.album.images[0].url }}" alt="{{ track.album.name }}">
+                <div>
+                    <div class="album-name">{{ track.album.name }}</div>
+                    <div class="album-meta">{{ track.album.release_date }}</div>
+                </div>
+            </a>
+        </section>
+    </main>
+
+    <script>
+        function copyTrackInfo() {
+            const track = {{ track | tojson }};
+            const info = `${track.name} - ${track.artists.map(a => a.name).join(', ')}\n${track.external_urls.spotify}`;
+            navigator.clipboard.writeText(info).then(() => {
+                alert('Track info copied to clipboard!');
+            });
+        }
+    </script>
+</body>
+</html>

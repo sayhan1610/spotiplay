@@ -1,0 +1,194 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Audio Analyzer - Spotify Toolkit</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+</head>
+<body>
+    <nav class="navbar">
+        <div class="nav-brand">
+            <svg class="spotify-icon" viewBox="0 0 24 24" fill="currentColor">
+                <path d="M12 0C5.4 0 0 5.4 0 12s5.4 12 12 12 12-5.4 12-12S18.66 0 12 0zm5.521 17.34c-.24.359-.66.48-1.021.24-2.82-1.74-6.36-2.101-10.561-1.141-.418.122-.779-.179-.899-.539-.12-.421.18-.78.54-.9 4.56-1.021 8.52-.6 11.64 1.32.42.18.479.659.301 1.02zm1.44-3.3c-.301.42-.841.6-1.262.3-3.239-1.98-8.159-2.58-11.939-1.38-.479.12-1.02-.12-1.14-.6-.12-.48.12-1.021.6-1.141C9.6 9.9 15 10.561 18.72 12.84c.361.181.54.78.241 1.2zm.12-3.36C15.24 8.4 8.82 8.16 5.16 9.301c-.6.179-1.2-.181-1.38-.721-.18-.601.18-1.2.72-1.381 4.26-1.26 11.28-1.02 15.721 1.621.539.3.719 1.02.419 1.56-.299.421-1.02.599-1.559.3z"/>
+            </svg>
+            <span>Spotify Toolkit</span>
+        </div>
+        <div class="nav-links">
+            <a href="/" class="nav-link">Dashboard</a>
+            <a href="/search" class="nav-link">Search</a>
+            <a href="/browse" class="nav-link">Browse</a>
+            <a href="/recommendations" class="nav-link">Discover</a>
+            <a href="/analyzer" class="nav-link active">Analyzer</a>
+        </div>
+    </nav>
+
+    <main class="main-content">
+        <section class="page-header">
+            <h1>Audio Analyzer</h1>
+            <p>Deep dive into any track's audio features and analysis</p>
+        </section>
+
+        <section class="analyzer-input">
+            <div class="search-box">
+                <input type="text" id="analyzerInput" placeholder="Enter Spotify track ID or URL">
+                <button class="search-btn" onclick="analyzeTrack()">Analyze</button>
+            </div>
+            <p class="input-hint">Paste a Spotify track ID or URL to see detailed audio analysis</p>
+        </section>
+
+        <div id="analyzerResults"></div>
+    </main>
+
+    <script>
+        function extractTrackId(input) {
+            let id = input.trim();
+            if (id.includes('spotify.com/track/')) {
+                const match = id.match(/spotify\.com\/track\/([a-zA-Z0-9]+)/);
+                if (match) id = match[1];
+            }
+            return id;
+        }
+
+        async function analyzeTrack() {
+            const input = document.getElementById('analyzerInput').value;
+            if (!input) return;
+
+            const trackId = extractTrackId(input);
+            const container = document.getElementById('analyzerResults');
+            container.innerHTML = '<div class="loading">Analyzing track...</div>';
+
+            try {
+                // Get track info and audio features in parallel
+                const [trackRes, featuresRes] = await Promise.all([
+                    fetch(`/api/track/${trackId}`),
+                    fetch(`/api/track/audio-features/${trackId}`)
+                ]);
+
+                const track = await trackRes.json();
+                const features = await featuresRes.json();
+
+                if (track.error) {
+                    container.innerHTML = `<div class="error">${track.error}</div>`;
+                    return;
+                }
+
+                // Render track info
+                let html = `
+                    <div class="analyzer-track">
+                        <img src="${track.album?.images?.[0]?.url || ''}" alt="${track.name}">
+                        <div class="track-details">
+                            <h2>${track.name}</h2>
+                            <p>${track.artists?.map(a => a.name).join(', ') || ''}</p>
+                            <p>${track.album?.name || ''}</p>
+                        </div>
+                    </div>
+                `;
+
+                // Render audio features
+                if (!features.error) {
+                    html += `
+                        <section class="audio-features">
+                            <h3>Audio Features</h3>
+                            <div class="features-grid">
+                                ${renderFeatureBar('Energy', features.energy)}
+                                ${renderFeatureBar('Danceability', features.danceability)}
+                                ${renderFeatureBar('Valence (Mood)', features.valence)}
+                                ${renderFeatureBar('Acousticness', features.acousticness)}
+                                ${renderFeatureBar('Instrumentalness', features.instrumentalness)}
+                                ${renderFeatureBar('Liveness', features.liveness)}
+                                ${renderFeatureBar('Speechiness', features.speechiness)}
+                                ${renderFeatureRow('Loudness', features.loudness + ' dB')}
+                                ${renderFeatureRow('Tempo', Math.round(features.tempo) + ' BPM')}
+                                ${renderFeatureRow('Key', keyName(features.key))}
+                                ${renderFeatureRow('Mode', features.mode === 1 ? 'Major' : 'Minor')}
+                                ${renderFeatureRow('Time Signature', features.time_signature + '/4')}
+                                ${renderFeatureRow('Duration', formatDuration(features.duration_ms))}
+                            </div>
+                        </section>
+                    `;
+                }
+
+                // Get detailed analysis
+                try {
+                    const analysisRes = await fetch(`/api/track/analysis/${trackId}`);
+                    const analysis = await analysisRes.json();
+
+                    if (!analysis.error) {
+                        html += `
+                            <section class="detail-section">
+                                <h3>Detailed Analysis</h3>
+                                <div class="analysis-stats">
+                                    <div class="stat-card">
+                                        <div class="stat-value">${analysis.bars?.length || 0}</div>
+                                        <div class="stat-label">Bars</div>
+                                    </div>
+                                    <div class="stat-card">
+                                        <div class="stat-value">${analysis.beats?.length || 0}</div>
+                                        <div class="stat-label">Beats</div>
+                                    </div>
+                                    <div class="stat-card">
+                                        <div class="stat-value">${analysis.sections?.length || 0}</div>
+                                        <div class="stat-label">Sections</div>
+                                    </div>
+                                    <div class="stat-card">
+                                        <div class="stat-value">${analysis.segments?.length || 0}</div>
+                                        <div class="stat-label">Segments</div>
+                                    </div>
+                                </div>
+                            </section>
+                        `;
+                    }
+                } catch (e) {
+                    // Detailed analysis might not be available
+                }
+
+                container.innerHTML = html;
+            } catch (err) {
+                container.innerHTML = `<div class="error">Error: ${err.message}</div>`;
+            }
+        }
+
+        function renderFeatureBar(label, value) {
+            const percent = Math.round(value * 100);
+            return `
+                <div class="feature-item">
+                    <div class="feature-label">${label}</div>
+                    <div class="feature-bar">
+                        <div class="feature-fill" style="width: ${percent}%"></div>
+                    </div>
+                    <div class="feature-value">${percent}%</div>
+                </div>
+            `;
+        }
+
+        function renderFeatureRow(label, value) {
+            return `
+                <div class="feature-item">
+                    <div class="feature-label">${label}</div>
+                    <div class="feature-value">${value}</div>
+                </div>
+            `;
+        }
+
+        function keyName(key) {
+            const keys = ['C', 'C#', 'D', 'D#', 'E', 'F', 'F#', 'G', 'G#', 'A', 'A#', 'B'];
+            return keys[key] || 'Unknown';
+        }
+
+        function formatDuration(ms) {
+            const minutes = Math.floor(ms / 60000);
+            const seconds = Math.floor((ms % 60000) / 1000);
+            return `${minutes}:${seconds.toString().padStart(2, '0')}`;
+        }
+
+        // Analyze on Enter
+        document.getElementById('analyzerInput').addEventListener('keypress', (e) => {
+            if (e.key === 'Enter') analyzeTrack();
+        });
+    </script>
+</body>
+</html>

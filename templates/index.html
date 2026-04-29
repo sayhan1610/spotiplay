@@ -1,58 +1,156 @@
-<!doctype html>
+<!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="utf-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>SpotiPlay - Spotify Playlists Showcase</title>
-  <link rel="preconnect" href="https://fonts.googleapis.com">
-  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Spotify Toolkit</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
 </head>
 <body>
-  <main class="wrap">
-    <section class="hero">
-      <div class="eyebrow">Project for CIS 115</div>
-      <h1>Project SpotiPlay</h1>
-      <div class="meta">
-        <span class="pill">Preset playlist list</span>
-        <span class="pill">Spotify Web API</span>
-        <span class="pill">Flask backend</span>
-        <span class="pill">CSS UI design</span>
-      </div>
-    </section>
+    <nav class="navbar">
+        <div class="nav-brand">
+            <svg class="spotify-icon" viewBox="0 0 24 24" fill="currentColor">
+                <path d="M12 0C5.4 0 0 5.4 0 12s5.4 12 12 12 12-5.4 12-12S18.66 0 12 0zm5.521 17.34c-.24.359-.66.48-1.021.24-2.82-1.74-6.36-2.101-10.561-1.141-.418.122-.779-.179-.899-.539-.12-.421.18-.78.54-.9 4.56-1.021 8.52-.6 11.64 1.32.42.18.479.659.301 1.02zm1.44-3.3c-.301.42-.841.6-1.262.3-3.239-1.98-8.159-2.58-11.939-1.38-.479.12-1.02-.12-1.14-.6-.12-.48.12-1.021.6-1.141C9.6 9.9 15 10.561 18.72 12.84c.361.181.54.78.241 1.2zm.12-3.36C15.24 8.4 8.82 8.16 5.16 9.301c-.6.179-1.2-.181-1.38-.721-.18-.601.18-1.2.72-1.381 4.26-1.26 11.28-1.02 15.721 1.621.539.3.719 1.02.419 1.56-.299.421-1.02.599-1.559.3z"/>
+            </svg>
+            <span>Spotify Toolkit</span>
+        </div>
+        <div class="nav-links">
+            <a href="/" class="nav-link {% if request.path == '/' %}active{% endif %}">Dashboard</a>
+            <a href="/search" class="nav-link {% if request.path == '/search' %}active{% endif %}">Search</a>
+            <a href="/browse" class="nav-link {% if request.path == '/browse' %}active{% endif %}">Browse</a>
+            <a href="/recommendations" class="nav-link {% if request.path == '/recommendations' %}active{% endif %}">Discover</a>
+            <a href="/analyzer" class="nav-link {% if request.path == '/analyzer' %}active{% endif %}">Analyzer</a>
+        </div>
+    </nav>
 
-    {% if playlists %}
-      <section class="grid">
-        {% for playlist in playlists %}
-          <article class="card">
-            <div class="cover">
-              {% if playlist.image_url %}
-                <img src="{{ playlist.image_url }}" alt="{{ playlist.name }} cover art">
-              {% else %}
-                <div class="fallback">No Cover Art</div>
-              {% endif %}
+    <main class="main-content">
+        <section class="hero">
+            <h1>Spotify API Toolkit</h1>
+            <p>A powerful interface for exploring Spotify's complete API capabilities</p>
+        </section>
+
+        <section class="features-grid">
+            <div class="feature-card" onclick="location.href='/search'">
+                <div class="feature-icon">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <circle cx="11" cy="11" r="8"/>
+                        <path d="M21 21l-4.35-4.35"/>
+                    </svg>
+                </div>
+                <h3>Advanced Search</h3>
+                <p>Search tracks, artists, albums, and playlists with powerful filters</p>
             </div>
-            <div class="content">
-              <div class="title-row">
-                <h2 class="title">{{ playlist.name }}</h2>
-              </div>
-              <p class="desc">{{ playlist.description }}</p>
-              <div class="actions">
-                {% if playlist.spotify_url %}
-                  <a class="btn primary" href="{{ playlist.spotify_url }}" target="_blank" rel="noreferrer">Open in Spotify</a>
-                {% endif %}
-                <a class="btn secondary" href="/playlist/{{ playlist.id }}">Details</a>
-              </div>
+
+            <div class="feature-card" onclick="location.href='/browse'">
+                <div class="feature-icon">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <rect x="3" y="3" width="7" height="7"/>
+                        <rect x="14" y="3" width="7" height="7"/>
+                        <rect x="14" y="14" width="7" height="7"/>
+                        <rect x="3" y="14" width="7" height="7"/>
+                    </svg>
+                </div>
+                <h3>Browse & Explore</h3>
+                <p>Discover featured playlists, new releases, and categories</p>
             </div>
-          </article>
-        {% endfor %}
-      </section>
-    {% else %}
-      <div class="empty">
-        No playlists found yet. Add playlist URLs or IDs to <strong>playlists.json</strong> and refresh.
-      </div>
-    {% endif %}
-  </main>
+
+            <div class="feature-card" onclick="location.href='/recommendations'">
+                <div class="feature-icon">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <path d="M12 2L2 7l10 5 10-5-10-5z"/>
+                        <path d="M2 17l10 5 10-5"/>
+                        <path d="M2 12l10 5 10-5"/>
+                    </svg>
+                </div>
+                <h3>Discover</h3>
+                <p>Get personalized recommendations based on your favorite seeds</p>
+            </div>
+
+            <div class="feature-card" onclick="location.href='/analyzer'">
+                <div class="feature-icon">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <path d="M2 12h2l3-9 4 18 3-9h6"/>
+                    </svg>
+                </div>
+                <h3>Audio Analyzer</h3>
+                <p>View detailed audio features and analysis for any track</p>
+            </div>
+        </section>
+
+        <section class="quick-actions">
+            <h2>Quick Actions</h2>
+            <div class="action-buttons">
+                <button class="action-btn" onclick="showIdInput('track')">
+                    <span class="btn-icon">🎵</span>
+                    Track Info
+                </button>
+                <button class="action-btn" onclick="showIdInput('artist')">
+                    <span class="btn-icon">🎤</span>
+                    Artist Info
+                </button>
+                <button class="action-btn" onclick="showIdInput('album')">
+                    <span class="btn-icon">💿</span>
+                    Album Info
+                </button>
+                <button class="action-btn" onclick="showIdInput('playlist')">
+                    <span class="btn-icon">📋</span>
+                    Playlist Info
+                </button>
+            </div>
+        </section>
+
+        <div id="idModal" class="modal">
+            <div class="modal-content">
+                <span class="close" onclick="closeModal()">&times;</span>
+                <h3 id="modalTitle">Enter ID</h3>
+                <input type="text" id="idInput" placeholder="Spotify ID or URL">
+                <button class="submit-btn" onclick="submitId()">Go</button>
+            </div>
+        </div>
+    </main>
+
+    <script>
+        let currentType = 'track';
+
+        function showIdInput(type) {
+            currentType = type;
+            document.getElementById('modalTitle').textContent = 
+                type.charAt(0).toUpperCase() + type.slice(1) + ' ID / URL';
+            document.getElementById('idModal').style.display = 'block';
+        }
+
+        function closeModal() {
+            document.getElementById('idModal').style.display = 'none';
+            document.getElementById('idInput').value = '';
+        }
+
+        function submitId() {
+            const id = document.getElementById('idInput').value.trim();
+            if (!id) return;
+
+            // Extract ID from URL if needed
+            let cleanId = id;
+            if (id.includes('spotify.com')) {
+                const match = id.match(/spotify\.com\/(track|artist|album|playlist)\/([a-zA-Z0-9]+)/);
+                if (match) {
+                    cleanId = match[2];
+                }
+            }
+
+            location.href = '/' + currentType + '/' + cleanId;
+            closeModal();
+        }
+
+        // Close modal when clicking outside
+        window.onclick = function(event) {
+            const modal = document.getElementById('idModal');
+            if (event.target == modal) {
+                closeModal();
+            }
+        }
+    </script>
 </body>
 </html>

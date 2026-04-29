@@ -1,0 +1,189 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Discover - Spotify Toolkit</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+</head>
+<body>
+    <nav class="navbar">
+        <div class="nav-brand">
+            <svg class="spotify-icon" viewBox="0 0 24 24" fill="currentColor">
+                <path d="M12 0C5.4 0 0 5.4 0 12s5.4 12 12 12 12-5.4 12-12S18.66 0 12 0zm5.521 17.34c-.24.359-.66.48-1.021.24-2.82-1.74-6.36-2.101-10.561-1.141-.418.122-.779-.179-.899-.539-.12-.421.18-.78.54-.9 4.56-1.021 8.52-.6 11.64 1.32.42.18.479.659.301 1.02zm1.44-3.3c-.301.42-.841.6-1.262.3-3.239-1.98-8.159-2.58-11.939-1.38-.479.12-1.02-.12-1.14-.6-.12-.48.12-1.021.6-1.141C9.6 9.9 15 10.561 18.72 12.84c.361.181.54.78.241 1.2zm.12-3.36C15.24 8.4 8.82 8.16 5.16 9.301c-.6.179-1.2-.181-1.38-.721-.18-.601.18-1.2.72-1.381 4.26-1.26 11.28-1.02 15.721 1.621.539.3.719 1.02.419 1.56-.299.421-1.02.599-1.559.3z"/>
+            </svg>
+            <span>Spotify Toolkit</span>
+        </div>
+        <div class="nav-links">
+            <a href="/" class="nav-link">Dashboard</a>
+            <a href="/search" class="nav-link">Search</a>
+            <a href="/browse" class="nav-link">Browse</a>
+            <a href="/recommendations" class="nav-link active">Discover</a>
+            <a href="/analyzer" class="nav-link">Analyzer</a>
+        </div>
+    </nav>
+
+    <main class="main-content">
+        <section class="page-header">
+            <h1>Discover</h1>
+            <p>Get personalized track recommendations based on your preferences</p>
+        </section>
+
+        <section class="recommendation-form">
+            <div class="form-section">
+                <h3>Seed Selection</h3>
+                <div class="seed-inputs">
+                    <div class="seed-group">
+                        <label>Genre Seeds</label>
+                        <select id="seedGenres" multiple size="6">
+                            {% for genre in genres %}
+                            <option value="{{ genre }}">{{ genre }}</option>
+                            {% endfor %}
+                        </select>
+                        <small>Hold Ctrl/Cmd to select multiple</small>
+                    </div>
+                    <div class="seed-group">
+                        <label>Track Seeds (enter IDs)</label>
+                        <input type="text" id="seedTracks" placeholder="e.g., 4cOdK2wGLETKBW3PvgPWqT">
+                    </div>
+                    <div class="seed-group">
+                        <label>Artist Seeds (enter IDs)</label>
+                        <input type="text" id="seedArtists" placeholder="e.g., 0YC192cP3KPCRWx8zr8MfZ">
+                    </div>
+                </div>
+            </div>
+
+            <div class="form-section">
+                <h3>Audio Features</h3>
+                <div class="feature-sliders">
+                    <div class="slider-group">
+                        <label>Tempo: <span id="tempoVal">120</span> BPM</label>
+                        <input type="range" id="target_tempo" min="60" max="200" value="120" oninput="document.getElementById('tempoVal').textContent = this.value">
+                    </div>
+                    <div class="slider-group">
+                        <label>Energy: <span id="energyVal">0.5</span></label>
+                        <input type="range" id="target_energy" min="0" max="100" value="50" oninput="document.getElementById('energyVal').textContent = (this.value/100).toFixed(2)">
+                    </div>
+                    <div class="slider-group">
+                        <label>Danceability: <span id="danceVal">0.5</span></label>
+                        <input type="range" id="target_danceability" min="0" max="100" value="50" oninput="document.getElementById('danceVal').textContent = (this.value/100).toFixed(2)">
+                    </div>
+                    <div class="slider-group">
+                        <label>Valence (Mood): <span id="valenceVal">0.5</span></label>
+                        <input type="range" id="target_valence" min="0" max="100" value="50" oninput="document.getElementById('valenceVal').textContent = (this.value/100).toFixed(2)">
+                    </div>
+                    <div class="slider-group">
+                        <label>Acousticness: <span id="acousticVal">0.5</span></label>
+                        <input type="range" id="target_acousticness" min="0" max="100" value="50" oninput="document.getElementById('acousticVal').textContent = (this.value/100).toFixed(2)">
+                    </div>
+                    <div class="slider-group">
+                        <label>Instrumentalness: <span id="instrumentalVal">0.5</span></label>
+                        <input type="range" id="target_instrumentalness" min="0" max="100" value="50" oninput="document.getElementById('instrumentalVal').textContent = (this.value/100).toFixed(2)">
+                    </div>
+                </div>
+            </div>
+
+            <div class="form-actions">
+                <label>Number of tracks:</label>
+                <select id="recLimit">
+                    <option value="10">10</option>
+                    <option value="20" selected>20</option>
+                    <option value="50">50</option>
+                    <option value="100">100</option>
+                </select>
+                <button class="action-btn spotify-btn" onclick="getRecommendations()">Get Recommendations</button>
+            </div>
+        </section>
+
+        <section class="detail-section">
+            <h2>Recommendations</h2>
+            <div id="recommendationsResults" class="tracks-list">
+                <div class="results-placeholder">
+                    Select some seeds and click "Get Recommendations"
+                </div>
+            </div>
+        </section>
+    </main>
+
+    <script>
+        async function getRecommendations() {
+            const container = document.getElementById('recommendationsResults');
+            container.innerHTML = '<div class="loading">Getting recommendations...</div>';
+
+            const genres = Array.from(document.getElementById('seedGenres').selectedOptions).map(o => o.value);
+            const tracks = document.getElementById('seedTracks').value.trim();
+            const artists = document.getElementById('seedArtists').value.trim();
+            const limit = document.getElementById('recLimit').value;
+
+            if (!genres.length && !tracks && !artists) {
+                container.innerHTML = '<div class="error">Please select at least one seed (genre, track, or artist)</div>';
+                return;
+            }
+
+            let params = new URLSearchParams();
+            if (genres.length) params.append('seed_genres', genres.join(','));
+            if (tracks) params.append('seed_tracks', tracks);
+            if (artists) params.append('seed_artists', artists);
+            params.append('limit', limit);
+
+            // Add audio features
+            const features = ['tempo', 'energy', 'danceability', 'valence', 'acousticness', 'instrumentalness'];
+            features.forEach(f => {
+                const val = document.getElementById(`target_${f}`).value;
+                params.append(`target_${f}`, val / 100);
+            });
+
+            try {
+                const response = await fetch(`/api/recommendations?${params}`);
+                const data = await response.json();
+
+                if (data.error) {
+                    container.innerHTML = `<div class="error">${data.error}</div>`;
+                    return;
+                }
+
+                const tracks = data.tracks || [];
+                if (tracks.length === 0) {
+                    container.innerHTML = '<div class="results-placeholder">No recommendations found</div>';
+                    return;
+                }
+
+                container.innerHTML = tracks.map(track => `
+                    <div class="track-row" onclick="location.href='/track/${track.id}'">
+                        <img src="${track.album?.images?.[2]?.url || track.album?.images?.[0]?.url || ''}" alt="${track.name}">
+                        <div class="track-info">
+                            <div class="track-name">${track.name}</div>
+                            <div class="track-artists">${track.artists?.map(a => a.name).join(', ') || ''}</div>
+                        </div>
+                        <span class="track-duration">${formatDuration(track.duration_ms)}</span>
+                        <button class="copy-btn" onclick="event.stopPropagation(); copyTrackInfo('${track.id}')" title="Copy">📋</button>
+                    </div>
+                `).join('');
+            } catch (err) {
+                container.innerHTML = `<div class="error">Error: ${err.message}</div>`;
+            }
+        }
+
+        function formatDuration(ms) {
+            const minutes = Math.floor(ms / 60000);
+            const seconds = Math.floor((ms % 60000) / 1000);
+            return `${minutes}:${seconds.toString().padStart(2, '0')}`;
+        }
+
+        async function copyTrackInfo(trackId) {
+            try {
+                const response = await fetch(`/api/track/${trackId}`);
+                const track = await response.json();
+                const info = `${track.name} - ${track.artists.map(a => a.name).join(', ')}\n${track.external_urls.spotify}`;
+                await navigator.clipboard.writeText(info);
+                alert('Track info copied!');
+            } catch (err) {
+                alert('Failed to copy: ' + err.message);
+            }
+        }
+    </script>
+</body>
+</html>
